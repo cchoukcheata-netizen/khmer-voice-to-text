@@ -1,0 +1,12 @@
+{
+  "name": "Khmer Voice to Text",
+  "short_name": "Khmer Voice",
+  "description": "កម្មវិធីបម្លែងសំឡេងខ្មែរទៅជាអត្ថបទ",
+  "lang": "km",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef6ff",
+  "theme_color": "#334155"
+}

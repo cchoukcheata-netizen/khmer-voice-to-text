@@ -1,0 +1,132 @@
+
+<!doctype html>
+<html lang="km">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4107650696577773"
+     crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Khmer Voice to Text</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:24px;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef6ff,#f8f5ff);color:#172033}
+main{max-width:820px;margin:auto;background:white;padding:28px;border-radius:22px;box-shadow:0 12px 40px #0001}
+h1{font-size:28px}
+button{border:0;border-radius:12px;padding:13px;margin:4px;font-size:16px;font-weight:bold;cursor:pointer}
+#start{background:#dc2626;color:white}
+#stop{background:#334155;color:white}
+#clear{background:#eef2f7}
+#status{margin:18px 4px;color:#475467}
+textarea{width:100%;height:260px;padding:16px;font-size:20px;line-height:1.8;border:1px solid #ccd3df;border-radius:12px}
+small{color:#667085;line-height:1.8}
+</style>
+</head>
+<body>
+<main>
+<h1>🎙️ Khmer Voice → Text</h1>
+<p>និយាយតាម Microphone ដើម្បីបម្លែងសំឡេងទៅជាអត្ថបទ</p>
+<button id="start">🎙️ ចាប់ផ្ដើមនិយាយ</button>
+<button id="stop">⏹️ បញ្ឈប់</button>
+<button id="save">💾 រក្សាទុកអត្ថបទ</button>
+<button id="clear">🗑️ លុបអត្ថបទ</button>
+<p id="status">រួចរាល់។ ចុច «ចាប់ផ្ដើមនិយាយ» ដើម្បីសាកល្បង។</p>
+<textarea id="text" placeholder="អត្ថបទដែលសម្គាល់បាន នឹងបង្ហាញនៅទីនេះ..."></textarea>
+<p><small>មុខងារនេះមិនប្រើ OpenAI API ទេ។ ការគាំទ្រភាសាខ្មែរអាស្រ័យលើសេវាសម្គាល់សំឡេងរបស់ Browser។ ត្រូវការអ៊ីនធឺណិត ហើយ Chrome អាចស្នើសុំសិទ្ធិ Microphone។</small></p>
+</main>
+<script>
+document.getElementById("save").onclick = () => {
+  const content = document.getElementById("text").value;
+  if (!content.trim()) {
+    alert("សូមបញ្ចូលអត្ថបទជាមុនសិន");
+    return;
+  }
+  const blob = new Blob(["\uFEFF" + content], {
+    type: "text/plain;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "អត្ថបទខ្មែរ.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const startBtn = document.getElementById("start");
+const stopBtn = document.getElementById("stop");
+const clearBtn = document.getElementById("clear");
+const text = document.getElementById("text");
+const status = document.getElementById("status");
+let recognition = null;
+let finalText = "";
+let running = false;
+
+if (!SpeechRecognition) {
+  status.textContent = "Browser នេះមិនគាំទ្រមុខងារសម្គាល់សំឡេងទេ។ សូមសាកល្បង Google Chrome។";
+  startBtn.disabled = true;
+} else {
+  recognition = new SpeechRecognition();
+  recognition.lang = "km-KH";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    running = true;
+    status.textContent = "🎙️ កំពុងស្តាប់... សូមនិយាយ។";
+  };
+
+  recognition.onresult = (event) => {
+    let interim = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const part = event.results[i][0].transcript;
+      if (event.results[i].isFinal) finalText += part;
+      else interim += part;
+    }
+    text.value = finalText + interim;
+  };
+
+  recognition.onerror = (event) => {
+    status.textContent = "មានបញ្ហា៖ " + event.error +
+      "។ សូមពិនិត្យ Microphone និងការតភ្ជាប់អ៊ីនធឺណិត។";
+  };
+
+  recognition.onend = () => {
+    running = false;
+    status.textContent = "បានបញ្ឈប់ការស្តាប់។";
+  };
+}
+
+startBtn.onclick = () => {
+  if (!recognition || running) return;
+  finalText = text.value;
+  try {
+    recognition.start();
+  } catch (e) {
+    status.textContent = "សូមរង់ចាំបន្តិច រួចចុចចាប់ផ្ដើមម្ដងទៀត។";
+  }
+};
+
+stopBtn.onclick = () => {
+  if (recognition && running) recognition.stop();
+};
+
+clearBtn.onclick = () => {
+  if (recognition && running) recognition.stop();
+  finalText = "";
+  text.value = "";
+  status.textContent = "បានលុបអត្ថបទ។ អ្នកអាចចាប់ផ្ដើមម្ដងទៀត។";
+};
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => {
+        console.error("Service Worker error:", error);
+      });
+  });
+}
+</script>
+</body>
+</html>
+
